@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+    <link rel="stylesheet" type="text/css" href="main.css">
+
+
+</head>
+<body>
+    <div class="container">
+
+        <h1>test</h1>
+
+        <h2 id="test"></h2>
+
+        <label for="current" class="col-lg-2 control-label">Current value</label>
+        <input id="current" type="text" disabled>
+
+        <label for="extra" class="col-lg-2 control-label">+ extra</label>
+        <input id="extra" type="number" min="0" value="0" step="0.001">
+
+        <button id="button"></button>
+
+        <br><br>
+        <a id="status" href="https://etherscan.io/tx/" target="_blank" style="display: none;"><button></button></a>
+    </div>
+    <div class="container metamask" style="display: none;">
+        <h1>Metamask is required, please install from Chrome Webstore</h1>
+        <a href="https://metamask.io/"><img src="download-metamask.png"></a>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+
+     <script>
+         if(window.navigator.userAgent.indexOf("MSIE ") > -1) {
+             alert('Internet Explorer is not supported');
+             throw new Error();
+         }
+        if (typeof web3 !== 'undefined') {
+            web3 = new Web3(web3.currentProvider);
+        } else {
+            $('.container').hide();
+            $('.metamask').show();
+           throw new Error();
+        }
+        let account = web3.eth.accounts[0];
+        const accountInterval = setInterval(function() {
+            if (web3.eth.accounts[0] !== account) {
+                account = web3.eth.accounts[0];
+            }
+        }, 100);
+        const VasyaContract = web3.eth.contract([{"constant":false,"inputs":[],"name":"kill","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"put","outputs":[],"payable":true,"stateMutability":"payable","type":"function"},{"constant":true,"inputs":[],"name":"get","outputs":[{"name":"","type":"uint256"},{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"inputs":[],"payable":true,"stateMutability":"payable","type":"constructor"}]);
+        const ctr = VasyaContract.at('0x7b3b94e979dc4daa5898c1329f22a90e0305cb7a');
+         function getExtra() {
+              try {
+                  return parseFloat($('#extra').val());
+              } catch(e) {
+                  return 0;
+              }
+         }
+         window.kill = () => {
+             ctr.kill.sendTransaction({value: 0, gas:50000}, function(error, result){
+                 console.log(error, result);
+             });
+         };
+        setInterval(x => ctr.get(function(error, result){
+            if(!error)
+                {
+                    const val = web3.fromWei(result[0], 'ether').toNumber();
+                    $('#current').val(val);
+                    $('#button').prop('disabled', account === result[1]).text('Put ' + (val * 2 + getExtra())).unbind().click(function() {
+                        const newPut = web3.toWei(val * 2 + getExtra(), 'ether');
+                        ctr.put.sendTransaction({value: newPut}, (e,r) => {
+                        if(e) {
+                            alert('Ошибка:' + e);
+                        }
+                        else {
+                            $('#status').attr('href', 'https://etherscan.io/tx/' + r).show();
+                            // noinspection JSJQueryEfficiency
+                            $('#status button').text('TX ' + r);
+                            $('#extra').val(0);
+                        }
+                    });
+                });
+                }
+            else
+                console.error(error);
+        }),500);
+
+    </script>
+
+</body>
+</html>
