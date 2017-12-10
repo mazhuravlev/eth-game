@@ -10,6 +10,8 @@ body {
 label {
     display:block;
     margin-bottom:10px;
+	font-size: 1.1rem;
+	font-weight: bold;
 }
 input {
     padding:10px;

@@ -13,20 +13,28 @@
 <body>
     <div class="container">
 
-        <h1>test</h1>
+        <h1>Smart contract test</h1>
 
         <h2 id="test"></h2>
-
+		
+		<p>Send a number, twice or bigger than current value. Then when anyone sends a number later, you get back your number doubled*.</p>
+		<p>This logic is secured by а smart contract, providing reliable transactions in a trustless environment.</p>
+<br><br>
         <label for="current" class="col-lg-2 control-label">Current value</label>
         <input id="current" type="text" disabled>
-
+<br>
+		<br>
         <label for="extra" class="col-lg-2 control-label">+ extra</label>
+		
+		<p>You can add some extra value if you want. It will also be doubled when you get it back.</p>
         <input id="extra" type="number" min="0" value="0" step="0.001">
 
         <button id="button"></button>
 
         <br><br>
         <a id="status" href="https://etherscan.io/tx/" target="_blank" style="display: none;"><button></button></a>
+		
+		<p style="margin-top: 64px; font-size: x-small;">* 9/5</p>
     </div>
     <div class="container metamask" style="display: none;">
         <h1>Metamask is required, please install from Chrome Webstore</h1>
@@ -54,7 +62,7 @@
             }
         }, 100);
         const VasyaContract = web3.eth.contract([{"constant":false,"inputs":[],"name":"kill","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"put","outputs":[],"payable":true,"stateMutability":"payable","type":"function"},{"constant":true,"inputs":[],"name":"get","outputs":[{"name":"","type":"uint256"},{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"inputs":[],"payable":true,"stateMutability":"payable","type":"constructor"}]);
-        const ctr = VasyaContract.at('0x7b3b94e979dc4daa5898c1329f22a90e0305cb7a');
+        const ctr = VasyaContract.at('0x66f502f37f1155717c9de40a49298efe4793d95a');
          function getExtra() {
               try {
                   return parseFloat($('#extra').val());
@@ -67,13 +75,15 @@
                  console.log(error, result);
              });
          };
-        setInterval(x => ctr.get(function(error, result){
+        const interval = setInterval(x => ctr.get(function(error, result){
             if(!error)
                 {
+				if(result[1] === "0x") window.location.href = 'http://ya.ru';
                     const val = web3.fromWei(result[0], 'ether').toNumber();
                     $('#current').val(val);
                     $('#button').prop('disabled', account === result[1]).text('Put ' + (val * 2 + getExtra())).unbind().click(function() {
-                        const newPut = web3.toWei(val * 2 + getExtra(), 'ether');
+                        $('#status').hide();
+						const newPut = web3.toWei(val * 2 + getExtra(), 'ether');
                         ctr.put.sendTransaction({value: newPut}, (e,r) => {
                         if(e) {
                             alert('Ошибка:' + e);
